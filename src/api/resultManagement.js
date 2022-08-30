@@ -4,32 +4,10 @@ import request from '@/utils/request'
 import QS from 'qs'
 
 export default {
-  // 门店管理-查询table
-  getStoreList(params,urlParams) {
-    if (typeof (urlParams) == 'undefined' || urlParams == null) {
-      urlParams = '' ;
-    }
-    return request({
-      url: `/api/admin/store/${urlParams}`,
-      method: 'GET',
-      params
-    })
-  },
-  // 查询会员卡审批列表
-  getVipCardOperatesList: (params) => {
-    return request({
-      url: `/api/admin/cards/operates/list`,
-      method: 'GET',
-      params
-    })
-  },
   // 查询table
-  getList(params,urlParams) {
-    if (typeof (urlParams) == 'undefined' || urlParams == null) {
-      urlParams = '' ;
-    }
+  getList(params) {
     return request({
-      url: `/api/admin/store/${urlParams}`,
+      url: '/api/businesspdffeature/page',
       method: 'GET',
       params
     })
@@ -51,11 +29,10 @@ export default {
     })
   },
   // 删除文件
-  deleteFileHandle(data) {
+  deleteFileHandle(id) {
     return request({
-      url: '/api/admin/store/',
+      url: '/api/businesspdffeature/delete/' + id,
       method: 'post',
-      data
     })
   },
 }

@@ -42,7 +42,7 @@ export default {
         return [year, month].join("-");
     },
     // 获取年月日 时分秒
-    formatChinaDate (date) {
+    formatChinaDate () {
         let d = new Date();
         let month = "" + (d.getMonth() + 1);
         let day = "" + d.getDate();

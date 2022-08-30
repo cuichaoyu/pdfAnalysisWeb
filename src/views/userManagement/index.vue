@@ -9,7 +9,7 @@
           <el-input
               v-model.trim="filtrateForm.name"
               placeholder=""
-              style="width: 300px"
+              style="width: 200px"
               clearable
           />
         </el-form-item>
@@ -40,16 +40,16 @@
             @selection-change="selectionChangeHandle"
         >
           <el-table-column type="selection" width="55" header-align="center" align="center" />
-          <el-table-column prop="id" header-align="center" align="center" label="序列" width="50"/>
-          <el-table-column prop="name" header-align="center" align="center" label="ID" width="150"/>
-          <el-table-column prop="type" header-align="center" align="center" label="用户名" width="150"/>
-          <el-table-column prop="address" header-align="center" align="center" label="备注"/>
-          <el-table-column prop="address" header-align="center" align="center" label="更新时间"/>
+          <el-table-column type="index"header-align="center" align="center" label="序号" width="50"/>
+          <el-table-column prop="id" header-align="center" align="center" label="ID" width="150"/>
+          <el-table-column prop="name" header-align="center" align="center" label="用户名" width="150"/>
+          <el-table-column prop="remark" header-align="center" align="center" label="备注"/>
+          <el-table-column prop="updateTime" header-align="center" align="center" label="更新时间"/>
           <el-table-column header-align="center" align="center" width="250px" label="操作">
             <template slot-scope="scope">
               <el-button type="text" style="color: #409eff" @click="deleteHandle(scope.row)">编辑</el-button>
               <el-button type="text" v-if="scope.row.status == 0" style="color: #67c23a" @click="userEnableOrDisable(scope.row,1)">启用</el-button>
-              <el-button type="text" v-if="scope.row.status == 1" style="color: #78777c" @click="userEnableOrDisable(scope.row,0)">禁用</el-button>
+              <el-button type="text" v-if="scope.row.status == 1" style="color: red" @click="userEnableOrDisable(scope.row,0)">禁用</el-button>
               <el-button type="text" style="color: #e6a23c" @click="deleteHandle(scope.row)">删除</el-button>
             </template>
           </el-table-column>
@@ -58,12 +58,12 @@
       </div>
     </div>
 
-    <pagination v-show="totalPage > 0" :total="totalPage" :page.sync="listQuery.page" :limit.sync="listQuery.limit"
+    <pagination v-show="totalCount > 0" :total="totalCount" :page.sync="listQuery.currPage" :limit.sync="listQuery.pageSize"
                 @pagination="getList"
     />
 
-    <!-- 详情展示-->
-    <add-user v-if="addVisible" ref="addShow"/>
+    <!-- 新增展示-->
+    <add-user v-if="addVisible" ref="addShow" @getList="getList"/>
   </div>
 </template>
 
@@ -73,7 +73,7 @@ import Pagination from '@/components/Pagination' // secondary package based on e
 import AddUser from './add-user' // 新增弹框
 
 export default {
-  name: 'fileManagement',
+  name: 'userManagement',
   components: { Pagination, AddUser },
   data() {
     return {
@@ -85,10 +85,10 @@ export default {
       dataListLoading: true, // 表格加载数据时的 loading
       dataListSelections: [],
       tableList: [], // 表格数据
-      totalPage: 0, // 总条数
+      totalCount: 0, // 总条数
       listQuery: { // 表格当前页 和 当前页的展示数量
-        page: 1,
-        limit: 20
+        currPage: 1,
+        pageSize: 20
       },
       addVisible: false // 弹框展示隐藏
     }
@@ -105,19 +105,20 @@ export default {
         'name': this.filtrateForm.name
       }, this.listQuery)
       // 请求
-      const { data, status } = await api.getList(params).catch(e => {
-      })
-      if (status == '200') {
-        this.tableList = data.items
-        this.totalPage = data.count
+      const { data, code } = await api.getList(params);
+      if (code == '200') {
+        this.tableList = data.list
+        this.totalCount = data.totalCount
+        this.dataListLoading = false
+        this.$refs.table.bodyWrapper.scrollTop = 0 // 滚动条 回到顶部
       }
-      this.dataListLoading = false
-      this.$refs.table.bodyWrapper.scrollTop = 0 // 滚动条 回到顶部
 
     },
     //导出文件
     exportFile(){
-      let url = process.env.VUE_APP_BASE_API  + `api/admin/export/business?` ;
+      this.$message.success("开发中...")
+      return ;
+      let url = process.env.VUE_APP_BASE_API  + '' ;
       const params = {
         type: this.filtrateForm.type,
         name: this.filtrateForm.name,
@@ -139,17 +140,10 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(async() => {
-        // 提交删除
-        const { data, status } = await api.userEnableOrDisable(row.id)
-        if (status == '200') {
-          this.$message({
-            message: data.message,
-            type: 'success',
-            duration: 2000,
-            onClose: () => {
-              this.reSearch()// 刷新数据
-            }
-          })
+        const { message, code } = await api.userEnableOrDisable(row.id)
+        if (code == '200') {
+          this.$message.success(message);
+          this.reSearch()// 刷新数据
         }
       })
     },
@@ -161,16 +155,10 @@ export default {
         type: 'warning'
       }).then(async() => {
         // 提交删除
-        const { data, status } = await api.deleteHandle(row.id)
-        if (status == '200') {
-          this.$message({
-            message: data.message,
-            type: 'success',
-            duration: 2000,
-            onClose: () => {
-              this.reSearch()// 刷新数据
-            }
-          })
+        const { code, message } = await api.deleteHandle(row.id)
+        if (code == '200') {
+          this.$message.success(message);
+          this.reSearch()// 刷新数据
         }
       })
     },
@@ -180,15 +168,15 @@ export default {
     },
 
     // 新增弹框
-    handleCreate(row) {
+    handleCreate() {
       this.addVisible = true ;
       this.$nextTick(() => {
-        this.$refs.addShow.init(Object.assign({}, row))
+        this.$refs.addShow.init()
       })
     },
     // 查询
     reSearch() {
-      this.listQuery.page = 1 // 从1开始
+      this.listQuery.currPage = 1 // 从1开始
       this.getList()
     },
     // 重置

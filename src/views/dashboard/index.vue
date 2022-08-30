@@ -2,18 +2,21 @@
   <div class="dashboard-editor-container">
     <!-- <github-corner class="github-corner" /> -->
 
-
+    <h3> 欢迎回来!</h3>
+    <span>{{ now }}</span>
   </div>
 </template>
 
 <script>
 
+import util from '@/utils/utils'
 export default {
   name: 'DashboardAdmin',
   components: {
   },
   data() {
     return {
+      now:'',
       pickerOptions: {
         shortcuts: [{
           text: '最近一周',
@@ -60,6 +63,7 @@ export default {
     }
   },
   mounted() {
+    this.now = util.formatChinaDate() ;
   },
   methods: {
   }

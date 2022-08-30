@@ -46,20 +46,6 @@ router.beforeEach(async(to, from, next) => {
           // 动态添加可访问路由
           router.addRoutes(accessRoutes.menu)
 
-           router.addRoutes([{
-             path: '/profile/components',
-             component: Layout,
-             redirect: '/fileManagement/index',
-             children: [
-               {
-                 path: 'index',
-                 component: () => import('@/views/fileManagement/index'),
-                 name: '文件管理1111',
-                 meta: { title: '文件管理1111', icon: 'guide', noCache: true }
-               }
-             ]
-           }])
-
           // 黑客方法，以确保地址路由是完整的
           // 设置replace: true，这样导航就不会留下历史记录
           next({ ...to, replace: true })

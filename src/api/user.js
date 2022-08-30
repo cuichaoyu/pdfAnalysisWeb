@@ -6,7 +6,7 @@ import QS from 'qs'
 // 登录
 export function login(data) {
   return request({
-    url: '/api/admin/auth/login',
+    url: '/api/web/login',
     method: 'post',
     // data: QS.stringify(data)
     data
@@ -16,12 +16,20 @@ export function login(data) {
 // 请求用户信息
 export function getInfo(token) {
   return request({
-    url: '/api/admin/users',
+    url: '/api/user/info',
     method: 'get',
-    params: { token }
+    headers:{ token }
   })
 }
-
+// 图片验证码
+export function getCaptcha(params) {
+  return request({
+    url: '/api/captcha.jpg',
+    method: 'get',
+    responseType: 'blob',
+    params
+  })
+}
 // 请求 路由表
 export function getSysMenuList() {
   return request({

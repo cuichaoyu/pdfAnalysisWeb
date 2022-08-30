@@ -19,12 +19,12 @@ service.defaults.headers.post['Content-Type'] = 'application/json'
 service.interceptors.request.use(
   config => {
     // 在发送请求之前做些什么
-
+    config.data = JSON.stringify(config.data) ;
     if (store.getters.token) {
       // 让每个请求携带token
       // ['X-Token']是一个自定义的headers键
       // 根据实际情况修改
-      config.headers['Authorization'] = getToken()
+      config.headers['token'] = getToken()
     }
     return config
   },
@@ -48,8 +48,26 @@ service.interceptors.response.use(
    *也可以通过HTTP状态码判断状态
    */
   response => {
-   // console.log('请求返回', response)
-    return response ;
+    //console.log('-------' + JSON.stringify(response))
+    // 排除图片验证码
+    if (response.config.responseType == 'blob'){
+      return response ;
+    }
+    const res = response.data ;
+    if (res.code !== 200) {
+      Message({
+        message: res.message || '出错了',
+        type: 'error',
+        duration: 5 * 1000
+      })
+      if (res.code === 7009 || res.code === 7004|| res.code == 401) {
+        // to re-login
+        store.dispatch('user/resetToken').then(() => {
+          location.reload()
+        })
+      }
+    }
+    return res ;
   },
   error => {
     if (error.response.status == 401) {

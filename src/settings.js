@@ -1,5 +1,5 @@
 module.exports = {
-  title: '后台管理系统',
+  title: 'PDF辅助解析管理平台',
 
   /**
    * @type {boolean} true | false

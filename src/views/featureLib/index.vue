@@ -6,26 +6,32 @@
       <!-- 没有展开状态下的筛选框 -->
       <el-form ref="filtrateForm" :inline="true" :model="filtrateForm">
         <el-form-item label="效应名称">
-          <el-input
-              v-model.trim="filtrateForm.xyname"
-              placeholder=""
-              style="width: 300px"
-              clearable
-          />
+          <el-select v-model="filtrateForm.effectType" style="width: 160px" placeholder="请选择">
+            <el-option label="全部" value=""/>
+            <el-option
+                v-for="item in effectTypeList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="特征值">
-          <el-input
-              v-model.trim="filtrateForm.tzz"
-              placeholder=""
-              style="width: 300px"
-              clearable
-          />
+          <el-select v-model="filtrateForm.value" style="width: 160px" placeholder="请选择">
+            <el-option label="全部" value=""/>
+            <el-option
+                v-for="item in featureValueList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="解析组合名称">
           <el-input
-              v-model.trim="filtrateForm.zhname"
+              v-model.trim="filtrateForm.name"
               placeholder=""
-              style="width: 300px"
+              style="width: 200px"
               clearable
           />
         </el-form-item>
@@ -33,11 +39,9 @@
           <el-button type="primary" @click="reSearch()">查询</el-button>
           <el-button @click="reset()">重置</el-button>
         </el-form-item>
-        <el-form-item v-show="filtrateForm.type == ''">
+        <el-form-item>
           <el-button type="primary" class="filter-item"  @click="handleCreate()">新增</el-button>
           <el-button type="primary" class="filter-item"  @click="importFile()">导入</el-button>
-        </el-form-item>
-        <el-form-item>
           <el-button type="primary" class="filter-item"  @click="exportFile()">导出</el-button>
         </el-form-item>
       </el-form>
@@ -48,18 +52,18 @@
           title="导入文件"
           :visible.sync="importDialog.dialogVisible"
           width="30%"
+          :destroy-on-close='true'
+          :show-close="false"
           >
         <el-upload
+            ref="pdfUploadRef"
             class="upload-demo"
             :action="uploadActionUrl()"
             accept=".pdf"
             :on-success="handleAvatarSuccess"
-            :on-error="handleAvatarError"
-            multiple
-            :limit="10"
-            :file-list="importDialog.fileList">
+            :on-error="handleAvatarError">
           <el-button size="small" type="primary">点击上传</el-button>
-          <div slot="tip" class="el-upload__tip">只能上传PDF文件</div>
+          <div slot="tip" class="el-upload__tip">只能上传pdf文件</div>
         </el-upload>
         <span slot="footer" class="dialog-footer">
           <el-button @click="importDialog.dialogVisible = false">关闭</el-button>
@@ -83,13 +87,13 @@
             @selection-change="selectionChangeHandle"
         >
           <el-table-column type="selection" width="55" header-align="center" align="center" />
-          <el-table-column prop="id" header-align="center" align="center" label="序列" width="50"/>
-          <el-table-column prop="name" header-align="center" align="center" label="特征组合名称" width="500"/>
-          <el-table-column prop="type" header-align="center" align="center" label="效应名称" width="150"/>
-          <el-table-column prop="address" header-align="center" align="center" label="效应关键字"/>
-          <el-table-column prop="address" header-align="center" align="center" label="特征值"/>
-          <el-table-column prop="address" header-align="center" align="center" label="效应值单位"/>
-          <el-table-column prop="address" header-align="center" align="center" label="更新时间"/>
+          <el-table-column type="index" header-align="center" align="center" label="序列" width="50"/>
+          <el-table-column prop="name" header-align="center" align="center" label="特征组合名称" width="400"/>
+          <el-table-column prop="effectType" header-align="center" align="center" label="效应名称" width="150"/>
+          <el-table-column prop="effectKeys" header-align="center" align="center" label="效应关键字"/>
+          <el-table-column prop="value" header-align="center" align="center" label="特征值"/>
+          <el-table-column prop="effectUnit" header-align="center" align="center" label="效应值单位"/>
+          <el-table-column prop="updateTime" header-align="center" align="center" label="更新时间"/>
           <el-table-column header-align="center" align="center" width="100" label="操作">
             <template slot-scope="scope">
               <el-button type="text" @click="deleteHandle(scope.row)">删除</el-button>
@@ -100,12 +104,12 @@
       </div>
     </div>
 
-    <pagination v-show="totalPage > 0" :total="totalPage" :page.sync="listQuery.page" :limit.sync="listQuery.limit"
+    <pagination v-show="totalCount > 0" :total="totalCount" :page.sync="listQuery.currPage" :limit.sync="listQuery.pageSize"
                 @pagination="getList"
     />
 
     <!-- 详情展示-->
-    <add-feature v-if="addVisible" ref="addShow"/>
+    <add-feature v-if="addVisible" ref="addShow" @getList="getList"/>
   </div>
 </template>
 
@@ -113,31 +117,33 @@
 import api from '@/api/featureLib' // 请求数据
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination 分页组件
 import AddFeature from './add-feature' // 新增弹框
-
+import { effectTypeList,featureValueList } from '@/utils/dictionaries'
 export default {
-  name: 'fileManagement',
+  name: 'featureLib',
   components: { Pagination, AddFeature },
   data() {
     return {
       // 筛选框的 form 表单
       filtrateForm: {
-        type: '',
-        name: ''
+        effectType: '',
+        name: '',
+        value: ''
       },
+      featureValueList, // 效应名称
+      effectTypeList, //  特征值
       tableKey: 0,
       dataListLoading: true, // 表格加载数据时的 loading
       dataListSelections: [],
       tableList: [], // 表格数据
-      totalPage: 0, // 总条数
+      totalCount: 0, // 总条数
       listQuery: { // 表格当前页 和 当前页的展示数量
-        page: 1,
-        limit: 20
+        currPage: 1,
+        pageSize: 20
       },
       importDialog :{
         dialogVisible:false,
-        fileList:[],
       },
-      addVisible: false // 弹框展示隐藏
+      addVisible: false // 新增弹框展示隐藏
     }
   },
   created() {
@@ -149,32 +155,32 @@ export default {
       this.dataListLoading = true
       // 筛选+分页
       const params = Object.assign({
-        'type': this.filtrateForm.type,
-        'name': this.filtrateForm.name
+        'effectType': this.filtrateForm.effectType,
+        'name': this.filtrateForm.name,
+        'value': this.filtrateForm.value,
       }, this.listQuery)
       // 请求
-      const { data, status } = await api.getList(params).catch(e => {
-      })
-      if (status == '200') {
-        this.tableList = data.items
-        this.totalPage = data.count
+      const { code, data } = await api.getList(params) ;
+      if (code == '200') {
+        this.tableList = data.list
+        this.totalCount = data.totalCount
+        this.dataListLoading = false
+        this.$refs.table.bodyWrapper.scrollTop = 0 // 滚动条 回到顶部
       }
-      this.dataListLoading = false
-      this.$refs.table.bodyWrapper.scrollTop = 0 // 滚动条 回到顶部
 
     },
     // 导入文件
     importFile(){
-      this.importDialog.fileList.length = 0 ;
       this.importDialog.dialogVisible = true ;
     },
     // 导入文件URL
     uploadActionUrl(){
-      return process.env.VUE_APP_BASE_API + 'api/admin/upload' ;
+      return process.env.VUE_APP_BASE_API + 'api/upload' ;
     },
     // 上传成功
     handleAvatarSuccess(res, file) {
-      this.$message.success(file.name + '上传成功')
+      this.$message.success('上传成功') ;
+      this.importDialog.dialogVisible = false ;
     },
     // 上传错误
     handleAvatarError(err, file) {
@@ -182,10 +188,13 @@ export default {
     },
     //导出文件
     exportFile(){
-      let url = process.env.VUE_APP_BASE_API  + `api/admin/export/business?` ;
+      this.$message.success('开发中....')
+      return;
+      let url = process.env.VUE_APP_BASE_API  + `` ;
       const params = {
-        type: this.filtrateForm.type,
+        effectType: this.filtrateForm.effectType,
         name: this.filtrateForm.name,
+        value: this.filtrateForm.value,
       };
       for (const paramsKey in params) {
         url += `&${paramsKey}=${params[paramsKey]}`
@@ -206,16 +215,10 @@ export default {
         type: 'warning'
       }).then(async() => {
         // 提交删除
-        const { data, status } = await api.deleteHandle(row.id)
-        if (status == '200') {
-          this.$message({
-            message: data.message,
-            type: 'success',
-            duration: 2000,
-            onClose: () => {
-              this.reSearch()// 刷新数据
-            }
-          })
+        const { code, message } = await api.deleteHandle(row.id)
+        if (code == '200') {
+          this.$message.success(message);
+          this.reSearch()// 刷新数据
         }
       })
     },
@@ -225,21 +228,22 @@ export default {
     },
 
     // 新增弹框
-    handleCreate(row) {
+    handleCreate() {
       this.addVisible = true ;
       this.$nextTick(() => {
-        this.$refs.addShow.init(Object.assign({}, row))
+        this.$refs.addShow.init() ;
       })
     },
     // 查询
     reSearch() {
-      this.listQuery.page = 1 // 从1开始
+      this.listQuery.currPage = 1 // 从1开始
       this.getList()
     },
     // 重置
     reset() {
-      this.filtrateForm.type = '';
+      this.filtrateForm.effectType = '';
       this.filtrateForm.name = '';
+      this.filtrateForm.value = '';
     }
 
   }
@@ -261,4 +265,5 @@ $rowLength: 2;
   $rowLength: 3;
   @include calculation($rowLength: $rowLength);
 }
+
 </style>

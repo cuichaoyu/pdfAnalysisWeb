@@ -54,7 +54,7 @@
             @selection-change="selectionChangeHandle"
         >
           <el-table-column type="selection" width="55" header-align="center" align="center" />
-          <el-table-column prop="id" header-align="center" align="center" label="序列" width="50"/>
+          <el-table-column type="index" header-align="center" align="center" label="序列" width="50"/>
           <el-table-column prop="name" header-align="center" align="center" label="器件名称" width="500"/>
           <el-table-column prop="type" header-align="center" align="center" label="型号" width="150"/>
           <el-table-column prop="address" header-align="center" align="center" label="制造商"/>
@@ -77,7 +77,7 @@
       </div>
     </div>
 
-    <pagination v-show="totalPage > 0" :total="totalPage" :page.sync="listQuery.page" :limit.sync="listQuery.limit"
+    <pagination v-show="totalCount > 0" :total="totalCount" :page.sync="listQuery.currPage" :limit.sync="listQuery.pageSize"
                 @pagination="getList"
     />
 
@@ -105,10 +105,10 @@ export default {
       dataListLoading: true, // 表格加载数据时的 loading
       dataListSelections: [],
       tableList: [], // 表格数据
-      totalPage: 0, // 总条数
+      totalCount: 0, // 总条数
       listQuery: { // 表格当前页 和 当前页的展示数量
-        page: 1,
-        limit: 20
+        currPage: 1,
+        pageSize: 20
       },
       fileShowVisible: false // 详情 弹框展示隐藏
     }
@@ -126,13 +126,13 @@ export default {
         'status': this.filtrateForm.name
       }, this.listQuery)
       // 请求
-      const { data, status } = await api.getStoreList(params).catch(e => {
+      const { code, data } = await api.getList(params).catch(e => {
       })
-      if (String(status).substr(0, 2) == 20) {
-        this.tableList = data.items
-        this.totalPage = data.count
+      if (code == '200') {
+        //this.tableList = data.list
+        //this.totalCount = data.totalCount
       }
-      this.dataListLoading = false
+      this.dataListLoading = false ;
       this.$refs.table.bodyWrapper.scrollTop = 0 // 滚动条 回到顶部
 
     },
@@ -146,31 +146,17 @@ export default {
     },
     // 批量操作
     uploadBatchHandle() {
+      this.$message.success('开发中...');
       let ids = [] ;
       this.dataListSelections.forEach(item => {
         ids.push(item.id);
       })
-      this.$prompt('请输入暂停天数', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        inputPattern: /^\d+$/,
-        inputErrorMessage: '天数格式不正确'
-      }).then(async({ value }) => {
-        let params = {
-          value: value,
-          store_id: this.filtrateForm.store_id ,
-          ids: ids.join()
-        }
-        /* const { data, status } = await api.pauseBatchHandle(params)
-        if (String(status).substr(0, 2) == 20) {
-          this.$message.success(data.message)
-        } */
-        this.getList();
-      }).catch(() => {})
     },
     //导出文件
     exportFile(){
-      let url = process.env.VUE_APP_BASE_API  + `api/admin/export/business?` ;
+      this.$message.success('开发中...');
+      return;
+      let url = process.env.VUE_APP_BASE_API  + '' ;
       const params = {
         type: this.filtrateForm.type,
         name: this.filtrateForm.name,
@@ -194,16 +180,13 @@ export default {
         type: 'warning'
       }).then(async() => {
         // 提交删除
-        const { data, status } = await api.deleteFileHandle(row.id)
-        if (status == '200') {
+        const { code, message } = await api.deleteFileHandle(row.id)
+        if (code == '200') {
           this.$message({
-            message: data.message,
+            message: message,
             type: 'success',
-            duration: 2000,
-            onClose: () => {
-              this.reSearch()// 刷新数据
-            }
-          })
+          });
+          this.reSearch()// 刷新数据
         }
       })
     },
@@ -216,12 +199,12 @@ export default {
     },
     // 查询
     reSearch() {
-      this.listQuery.page = 1 // 从1开始
+      this.listQuery.currPage = 1 // 从1开始
       this.getList()
     },
     // 重置
     reset() {
-      this.listQuery.page = 1 // 从1开始
+      this.listQuery.currPage = 1 // 从1开始
       this.getList()
     }
 

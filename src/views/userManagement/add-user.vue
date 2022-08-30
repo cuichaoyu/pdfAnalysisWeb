@@ -5,6 +5,12 @@
       <el-form-item label="用户名" prop="name" >
         <el-input v-model="dataForm.name" maxlength="20" show-word-limit placeholder="用户名"/>
       </el-form-item>
+      <el-form-item label="账号" prop="account" >
+        <el-input v-model="dataForm.account" maxlength="20" show-word-limit placeholder="账号"/>
+      </el-form-item>
+      <el-form-item label="密码" prop="pwd" >
+        <el-input v-model="dataForm.pwd" maxlength="20" show-word-limit placeholder="密码"/>
+      </el-form-item>
       <el-form-item label="备注" prop="remark" >
         <el-input
             v-model="dataForm.remark"
@@ -34,11 +40,15 @@ export default {
     return {
       visible: false,
       dataForm: {
-        id: '',
+        id:'',
+        account: '', //账户
+        pwd: '', // 密码
         name: '', // 用户名
         remark: '', // 备注
       },
       dataRule: {
+        account: [{ required: true, message: '不能为空', trigger: 'blur' }],
+        pwd: [{ required: true, message: '不能为空', trigger: 'blur' }],
         name: [{ required: true, message: '不能为空', trigger: 'blur' }],
       }
     }
@@ -48,7 +58,7 @@ export default {
   },
   methods: {
     // 编辑时填充值
-    async init(row) {
+    async init() {
       this.visible = true // 显示
       this.$nextTick(() => {
         this.$refs['dataForm'].resetFields() // 清空输入框
@@ -59,23 +69,13 @@ export default {
     dataFormSubmit() {
       this.$refs['dataForm'].validate(async(valid) => {
         if (valid) {
-          const parameter = {
-            id: this.dataForm.id || '0', // 传0 代表新增
-            name: this.dataForm.name,
-            remark :this.dataForm.remark
-          }
-          const { data, status } = await api.sureSave(parameter)
-          if (String(status).substr(0, 2) == 20) {
-            this.$message({
-              message: data.message,
-              type: 'success',
-              duration: 2000,
-              onClose: () => {
-                this.visible = false
-                // 重新加载
-                this.$emit('getList')
-              }
-            })
+          const parameter = Object.values(Object.assign({}, this.dataForm))
+          const { code, message } = await api.sureSave(parameter)
+          if (code == '200') {
+            this.$message.success(message)
+            this.visible = false ;
+            // 重新加载
+            this.$emit('getList')
           }
         }
       })

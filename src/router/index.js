@@ -65,14 +65,19 @@ export const constantRoutes = [
   {
     path: '/',
     component: Layout,
-    redirect: '/dashboard',
-    name: 'dashboard',
+    redirect: '/fileManagement',
+    name: 'homePage',
+  },
+  {
+    path: '/fileManagement',
+    component: Layout,
+    redirect: '/fileManagement/index',
     children: [
       {
-        path: 'dashboard',
-        component: () => import('@/views/dashboard/index'),
-        name: 'Dashboard',
-        meta: { title: '首页', icon: 'splotch', affix: true }
+        path: 'index',
+        component: () => import('@/views/fileManagement/index'),
+        name: 'fileManagement',
+        meta: { title: '文件管理', icon: 'el-icon-folder', noCache: true }
       }
     ]
   },
@@ -85,7 +90,7 @@ export const constantRoutes = [
         path: 'index',
         component: () => import('@/views/resultManagement/index'),
         name: 'resultManagement',
-        meta: { title: '解析结果管理', icon: 'splotch', affix: true }
+        meta: { title: '解析结果管理', icon: 'el-icon-reading', affix: true }
       }
     ]
   },
@@ -98,7 +103,7 @@ export const constantRoutes = [
         path: 'index',
         component: () => import('@/views/featureLib/index'),
         name: 'featureLib',
-        meta: { title: '特征库管理', icon: 'guide', affix: true }
+        meta: { title: '特征库管理', icon: 'el-icon-postcard', affix: true }
       }
     ]
   },
@@ -111,23 +116,11 @@ export const constantRoutes = [
         path: 'index',
         component: () => import('@/views/userManagement/index'),
         name: 'userManagement',
-        meta: { title: '用户管理', icon: 'guide', affix: true }
+        meta: { title: '用户管理', icon: 'el-icon-user', affix: true }
       }
     ]
   },
-   {
-      path: '/fileManagement',
-      component: Layout,
-      redirect: '/fileManagement/index',
-      children: [
-        {
-          path: 'index',
-          component: () => import('@/views/fileManagement/index'),
-          name: 'fileManagement',
-          meta: { title: '文件管理', icon: 'guide', noCache: true }
-        }
-      ]
-    },
+
   {
     path: '/profile',
     component: Layout,

@@ -5,12 +5,9 @@ import QS from 'qs'
 
 export default {
   // 查询table
-  getList(params,urlParams) {
-    if (typeof (urlParams) == 'undefined' || urlParams == null) {
-      urlParams = '' ;
-    }
+  getList(params) {
     return request({
-      url: `/api/admin/store/${urlParams}`,
+      url: '/api/sysuser/page',
       method: 'GET',
       params
     })
@@ -18,23 +15,22 @@ export default {
   // 启用禁用
   userEnableOrDisable(data) {
     return request({
-      url: '/api/admin/store/',
+      url: '/api/sysuser/updateById',
       method: 'post',
       data
     })
   },
   // 删除
-  deleteHandle(data) {
+  deleteHandle(id) {
     return request({
-      url: '/api/admin/store/',
+      url: '/api/sysuser/delete/' + id,
       method: 'post',
-      data
     })
   },
   // 新增
   sureSave(data) {
     return request({
-      url: '/api/admin/store/',
+      url: '/api/sysuser/save',
       method: 'post',
       data
     })

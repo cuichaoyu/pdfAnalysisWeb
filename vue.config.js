@@ -47,8 +47,7 @@ module.exports = {
     proxy: {
       '/dev-api': {
         // ws: true,  // 跨域使用
-        // target: 'https://api.haorenxinxi.com/moban-api/',
-        target: 'https://testqj.yuanfangyun.com/',
+        target: 'http://myapi.haorenxinxi.com/',
         changeOrigin: true,
         pathRewrite: {
           '^/dev-api': ''
@@ -64,7 +63,7 @@ module.exports = {
       alias: {
         '@': resolve('src') // 配置@直接到 src 文件夹
       }
-    }
+    },
   },
   chainWebpack(config) {
     // 可以提高第一屏的速度，建议打开预加载

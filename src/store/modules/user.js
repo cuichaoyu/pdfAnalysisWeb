@@ -6,7 +6,7 @@ import {
   setUser, removeUser, getUser
 } from '@/utils/auth'
 import router, { resetRouter } from '@/router'
-import { pictureDomain } from '@/utils/enum'
+import { pictureDomain } from '@/utils/dictionaries'
 
 const state = {
   token: getToken(),
@@ -32,18 +32,17 @@ const mutations = {
 
 const actions = {
   // 用户登录
-  login({ commit }, userInfo) {
-    const { username, password } = userInfo
+  login({ commit }, loginInfo) {
     return new Promise((resolve, reject) => {
-      login({ phone: username.trim(), password: password }).then(response => {
-        const { data } = response
-        const user = Object.assign({},data.staff);
-        user.img = data.staff.img ? pictureDomain + data.staff.img : '' ;
-        commit('SET_TOKEN', data.token)
-        commit('SET_USER', user )
-        setToken(data.token)
-        setUser(user);
-        resolve()
+      login(loginInfo).then(res => {
+        if (res.code == 200){
+          commit('SET_TOKEN', res.data.token);
+          let user = {};
+          commit('SET_USER', user )
+          setToken(res.data.token)
+          setUser(user);
+        }
+        resolve(res)
       }).catch(error => {
         reject(error)
       })
@@ -79,22 +78,15 @@ const actions = {
   // user 退出登录
   logout({ commit, state, dispatch }) {
     return new Promise((resolve, reject) => {
-      logout(state.token).then(() => {
-        commit('SET_TOKEN', '')
-        commit('SET_ROLES', [])
-        commit('SET_USER', {})
-        removeToken()
-        resetRouter()
-        removeUser()
+      commit('SET_TOKEN', '')
+      commit('SET_ROLES', [])
+      commit('SET_USER', {})
+      removeToken()
+      resetRouter()
+      removeUser()
 
-        // reset visited views and cached views
-        // to fixed https://github.com/PanJiaChen/vue-element-admin/issues/2485
-        dispatch('tagsView/delAllViews', null, { root: true })
-
-        resolve()
-      }).catch(error => {
-        reject(error)
-      })
+      dispatch('tagsView/delAllViews', null, { root: true })
+      resolve()
     })
   },
 

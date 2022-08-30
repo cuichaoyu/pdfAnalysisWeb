@@ -2,7 +2,7 @@
 
 import Cookies from 'js-cookie'
 
-const TokenKey = 'Admin-Token'
+const TokenKey = 'token'
 const userInfo = 'userInfo'
 
 export function getToken() {

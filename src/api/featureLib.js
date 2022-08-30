@@ -5,28 +5,33 @@ import QS from 'qs'
 
 export default {
   // 查询table
-  getList(params,urlParams) {
-    if (typeof (urlParams) == 'undefined' || urlParams == null) {
-      urlParams = '' ;
-    }
+  getList(params) {
     return request({
-      url: `/api/admin/store/${urlParams}`,
+      url: '/api/businessfeature/page',
       method: 'GET',
       params
     })
   },
-  // 删除
-  deleteHandle(data) {
+
+  // 查询效应关键字字典
+  getEffectKeysList(params){
     return request({
-      url: '/api/admin/store/',
+      url: '/api/sysdict/list',
+      method: 'get',
+      params
+    })
+  },
+  // 删除
+  deleteHandle(id) {
+    return request({
+      url: '/api/businessfeature/delete/' + id,
       method: 'post',
-      data
     })
   },
   // 新增
   sureSave(data) {
     return request({
-      url: '/api/admin/store/',
+      url: '/api/businessfeature/save',
       method: 'post',
       data
     })
